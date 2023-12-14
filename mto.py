@@ -210,3 +210,37 @@ class MTO:
 
         logout_button = tk.Button(logout_frame, text="Logout", command=self.logout)
         logout_button.pack()    
+    
+    def logout(self):
+        # Remove all pages except the login/register page
+        for page in self.notebook.winfo_children()[1:]:
+            self.notebook.forget(page)
+
+        # Clears the username and password entry fields
+        self.username_entry.delete(0, tk.END)
+        self.password_entry.delete(0, tk.END)
+    
+        self.pages_created = False
+        
+        # Return to the login/register page
+        self.notebook.select(0)
+
+    def login(self):
+        # Get user input
+        username = self.username_entry.get()
+        password = self.password_entry.get()
+
+        # Hash the entered password
+        hashed_password = hashlib.sha256(password.encode()).hexdigest()
+
+        # Authenticate user
+        if self.authenticate(username, hashed_password):
+            messagebox.showinfo("Login", "Login successful!")
+            self.create_pages_after_login()
+        else:
+            messagebox.showerror("Login Failed", "Invalid username or password.")
+
+    def authenticate(self, username, hashed_password):
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE username=? AND password=?", (username, hashed_password))
+        return cursor.fetchone() is not None
