@@ -7,10 +7,10 @@ import os
 import tempfile
 import webbrowser
 import subprocess
-import spacy
-from nltk.tokenize import word_tokenize, sent_tokenize
-from nltk.corpus import stopwords
-from itertools import cycle
+# import spacy
+# from nltk.tokenize import word_tokenize, sent_tokenize
+# from nltk.corpus import stopwords
+# from itertools import cycle
 
 class MTO:
     def __init__(self, master):
