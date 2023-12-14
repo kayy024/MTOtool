@@ -6,10 +6,10 @@ import os
 import tempfile
 import webbrowser
 import subprocess
-# import spacy
-# from nltk.tokenize import word_tokenize, sent_tokenize
-# from nltk.corpus import stopwords
-# from itertools import cycle
+import spacy
+from nltk.tokenize import word_tokenize, sent_tokenize
+from nltk.corpus import stopwords
+from itertools import cycle
 
 class MTO:
     def __init__(self, master):
@@ -29,6 +29,9 @@ class MTO:
 
         # This is a temporary directory for storing CV files
         self.temp_dir = tempfile.mkdtemp()
+
+        #Here I am loading the spaCy model
+        self.nlp = spacy.load("en_core_web_sm")
 
     def create_table(self):
         cursor = self.conn.cursor()
