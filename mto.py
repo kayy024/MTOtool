@@ -93,6 +93,7 @@ class MTO:
         self.register_button = tk.Button(login_frame, text="Register", command=self.register_profile)
         self.register_button.pack()
 
+        # This is the CV page where users can add their file
     def create_upload_cv_page(self):
         upload_frame = ttk.Frame(self.notebook)
         self.notebook.add(upload_frame, text="Upload CV")
@@ -115,18 +116,21 @@ class MTO:
         logout_button = tk.Button(upload_frame, text="Logout", command=self.logout)
         logout_button.pack()
 
+        # This is to allow users to upload a PDF of their CV
     def choose_file(self):
         file_path = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf"), ("All Files", "*.*")])
         if file_path:
             messagebox.showinfo("File Selected", f"Selected File: {file_path}")
             self.save_cv_path(file_path)
 
+        # This is to allow users save their CV
     def save_cv_path(self, cv_path):
         username = self.get_current_username()
         cursor = self.conn.cursor()
         cursor.execute("UPDATE users SET cv_path=? WHERE username=?", (cv_path, username))
         self.conn.commit()
 
+        # This is to allow users to update their CV
     def update_cv(self):
         username = self.get_current_username()
         cursor = self.conn.cursor()
@@ -149,13 +153,15 @@ class MTO:
         else:
             messagebox.showinfo("No CV", "No CV to update.")
 
+        # This is to allow users to delete their CV
     def delete_cv(self):
         username = self.get_current_username()
         cursor = self.conn.cursor()
         cursor.execute("UPDATE users SET cv_path=NULL WHERE username=?", (username,))
         self.conn.commit()
         messagebox.showinfo("CV Deleted", "CV path successfully removed from the database.")
-
+       
+        # This is to allow users view their uploaded CV
     def view_cv(self):
         username = self.get_current_username()
         cursor = self.conn.cursor()
@@ -175,4 +181,32 @@ class MTO:
         else:
             messagebox.showinfo("No CV", "No CV to view.")
 
-        
+        # This page which will match users to jobs
+    def create_matching_page(self):
+        matching_frame = ttk.Frame(self.notebook)
+        self.notebook.add(matching_frame, text="Matching")
+
+        matching_label = tk.Label(matching_frame, text="Matching in progress...")
+        matching_label.pack()
+
+        logout_button = tk.Button(matching_frame, text="Logout", command=self.logout)
+        logout_button.pack()
+
+        # This is a chatbot page
+    def create_chatbot_page(self):
+        chatbot_frame = ttk.Frame(self.notebook)
+        self.notebook.add(chatbot_frame, text="Chatbot")
+
+        chatbot_label = tk.Label(chatbot_frame, text="Chatbot interface will be here.")
+        chatbot_label.pack()
+
+        logout_button = tk.Button(chatbot_frame, text="Logout", command=self.logout)
+        logout_button.pack()
+
+        # This allows users to logout
+    def create_logout_page(self):
+        logout_frame = ttk.Frame(self.notebook)
+        self.notebook.add(logout_frame, text="Logout")
+
+        logout_button = tk.Button(logout_frame, text="Logout", command=self.logout)
+        logout_button.pack()    
