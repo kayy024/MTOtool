@@ -244,3 +244,45 @@ class MTO:
         cursor = self.conn.cursor()
         cursor.execute("SELECT * FROM users WHERE username=? AND password=?", (username, hashed_password))
         return cursor.fetchone() is not None
+    
+    def register_profile(self):
+        # This allows the tool to get user input
+        new_username = self.new_username_entry.get()
+        new_password = self.new_password_entry.get()
+        age = self.age_entry.get()
+        selected_interest = self.selected_interest.get()
+
+        # This validates the input
+        if not new_username or not new_password:
+            messagebox.showerror("Error", "Username and password are required.")
+            return
+
+        # This hashes the password before storing
+        hashed_password = hashlib.sha256(new_password.encode()).hexdigest()
+
+        # This is to get the CV file path
+        cv_path = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf"), ("All Files", "*.*")])
+
+        # This is to test user registration
+        cursor = self.conn.cursor()
+        cursor.execute("INSERT INTO users (username, password, age, interests, cv_path) VALUES (?, ?, ?, ?, ?)",
+                       (new_username, hashed_password, age, selected_interest, cv_path if cv_path else None))
+        self.conn.commit()
+
+        messagebox.showinfo("Registration", "Registration successful!")
+        self.create_pages_after_login()
+
+    def create_pages_after_login(self):
+        # After a successful login or registration, the gui will create the additional pages
+        self.create_upload_cv_page()
+        self.create_matching_page()
+        self.create_chatbot_page()
+        self.create_logout_page()
+        # This redirects users to the CV page as soon as they are logged in
+        self.notebook.select(1)
+
+    def get_current_username(self):
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT username FROM users WHERE id=?", (self.notebook.index(self.notebook.select()) + 1,))
+        result = cursor.fetchone()
+        return result[0] if result else None
