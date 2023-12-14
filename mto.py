@@ -93,6 +93,86 @@ class MTO:
         self.register_button = tk.Button(login_frame, text="Register", command=self.register_profile)
         self.register_button.pack()
 
-        
+    def create_upload_cv_page(self):
+        upload_frame = ttk.Frame(self.notebook)
+        self.notebook.add(upload_frame, text="Upload CV")
+
+        upload_label = tk.Label(upload_frame, text="Upload your CV:")
+        upload_label.pack()
+
+        upload_button = tk.Button(upload_frame, text="Choose File", command=self.choose_file)
+        upload_button.pack()
+
+        update_button = tk.Button(upload_frame, text="Update CV", command=self.update_cv)
+        update_button.pack()
+
+        delete_button = tk.Button(upload_frame, text="Delete CV", command=self.delete_cv)
+        delete_button.pack()
+
+        view_button = tk.Button(upload_frame, text="View CV", command=self.view_cv)
+        view_button.pack()
+
+        logout_button = tk.Button(upload_frame, text="Logout", command=self.logout)
+        logout_button.pack()
+
+    def choose_file(self):
+        file_path = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf"), ("All Files", "*.*")])
+        if file_path:
+            messagebox.showinfo("File Selected", f"Selected File: {file_path}")
+            self.save_cv_path(file_path)
+
+    def save_cv_path(self, cv_path):
+        username = self.get_current_username()
+        cursor = self.conn.cursor()
+        cursor.execute("UPDATE users SET cv_path=? WHERE username=?", (cv_path, username))
+        self.conn.commit()
+
+    def update_cv(self):
+        username = self.get_current_username()
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT cv_path FROM users WHERE username=?", (username,))
+        result = cursor.fetchone()
+
+        if result is not None:
+            current_cv_path = result[0]
+
+            if current_cv_path:
+                if os.path.exists(current_cv_path):
+                    os.remove(current_cv_path)
+
+                new_cv_path = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf"), ("All Files", "*.*")])
+                if new_cv_path:
+                    messagebox.showinfo("File Updated", f"Updated CV: {new_cv_path}")
+                    self.save_cv_path(new_cv_path)
+            else:
+                messagebox.showinfo("No CV", "No CV to update.")
+        else:
+            messagebox.showinfo("No CV", "No CV to update.")
+
+    def delete_cv(self):
+        username = self.get_current_username()
+        cursor = self.conn.cursor()
+        cursor.execute("UPDATE users SET cv_path=NULL WHERE username=?", (username,))
+        self.conn.commit()
+        messagebox.showinfo("CV Deleted", "CV path successfully removed from the database.")
+
+    def view_cv(self):
+        username = self.get_current_username()
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT cv_path FROM users WHERE username=?", (username,))
+        result = cursor.fetchone()
+
+        if result is not None:
+            current_cv_path = result[0]
+
+            if current_cv_path:
+                try:
+                    subprocess.run(["open", current_cv_path], check=True)  
+                except subprocess.CalledProcessError as e:
+                    print(f"Error opening PDF: {e}")
+            else:
+                messagebox.showinfo("No CV", "No CV to view.")
+        else:
+            messagebox.showinfo("No CV", "No CV to view.")
 
         
