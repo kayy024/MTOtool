@@ -43,3 +43,40 @@ class MTO:
                 )
             ''')
             self.conn.commit()
+
+    def create_login_page(self):
+        login_frame = ttk.Frame(self.notebook)
+        self.notebook.add(login_frame, text="Login/Register")
+
+        self.label = tk.Label(login_frame, text="Welcome to MTO Tool!")
+        self.label.pack()
+
+        # This is the login section
+        self.username_label = tk.Label(login_frame, text="Username:")
+        self.username_label.pack()
+        self.username_entry = tk.Entry(login_frame)
+        self.username_entry.pack()
+
+        self.password_label = tk.Label(login_frame, text="Password:")
+        self.password_label.pack()
+        self.password_entry = tk.Entry(login_frame, show="*")  # Show '*' for password
+        self.password_entry.pack()
+
+        self.login_button = tk.Button(login_frame, text="Login", command=self.login)
+        self.login_button.pack()
+
+        # This is the register section
+        self.new_username_label = tk.Label(login_frame, text="New Username:")
+        self.new_username_label.pack()
+        self.new_username_entry = tk.Entry(login_frame)
+        self.new_username_entry.pack()
+
+        self.new_password_label = tk.Label(login_frame, text="New Password:")
+        self.new_password_label.pack()
+        self.new_password_entry = tk.Entry(login_frame, show="*")  # Show '*' for password
+        self.new_password_entry.pack()
+
+        self.age_label = tk.Label(login_frame, text="Age:")
+        self.age_label.pack()
+        self.age_entry = tk.Entry(login_frame)
+        self.age_entry.pack()
