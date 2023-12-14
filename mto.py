@@ -286,3 +286,9 @@ class MTO:
         cursor.execute("SELECT username FROM users WHERE id=?", (self.notebook.index(self.notebook.select()) + 1,))
         result = cursor.fetchone()
         return result[0] if result else None
+    
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = MTO(root)
+    root.mainloop()
+
