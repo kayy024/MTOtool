@@ -80,3 +80,19 @@ class MTO:
         self.age_label.pack()
         self.age_entry = tk.Entry(login_frame)
         self.age_entry.pack()
+
+        # This is a dropdown menu for users interests
+        self.interests_label = tk.Label(login_frame, text="Interests:")
+        self.interests_label.pack()
+        interests_options = ["Programming", "Data Science", "Software Engineering", "Accounting", "Other"]
+        self.selected_interest = tk.StringVar(login_frame)
+        self.selected_interest.set(interests_options[0])
+        self.interests_dropdown = tk.OptionMenu(login_frame, self.selected_interest, *interests_options)
+        self.interests_dropdown.pack()
+
+        self.register_button = tk.Button(login_frame, text="Register", command=self.register_profile)
+        self.register_button.pack()
+
+        
+
+        
