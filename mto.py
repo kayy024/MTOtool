@@ -29,3 +29,17 @@ class MTO:
 
         # This is a temporary directory for storing CV files
         self.temp_dir = tempfile.mkdtemp()
+
+    def create_table(self):
+            cursor = self.conn.cursor()
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT NOT NULL,
+                    password TEXT NOT NULL,
+                    age INTEGER,
+                    interests TEXT,
+                    cv_path TEXT
+                )
+            ''')
+            self.conn.commit()
