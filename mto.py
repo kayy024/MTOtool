@@ -1,4 +1,3 @@
-import os
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import sqlite3
@@ -32,18 +31,18 @@ class MTO:
         self.temp_dir = tempfile.mkdtemp()
 
     def create_table(self):
-            cursor = self.conn.cursor()
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS users (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    username TEXT NOT NULL,
-                    password TEXT NOT NULL,
-                    age INTEGER,
-                    interests TEXT,
-                    cv_path TEXT
-                )
-            ''')
-            self.conn.commit()
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL,
+                password TEXT NOT NULL,
+                age INTEGER,
+                interests TEXT,
+                cv_path TEXT
+            )
+        ''')
+        self.conn.commit()
 
     def create_login_page(self):
         login_frame = ttk.Frame(self.notebook)
@@ -263,11 +262,11 @@ class MTO:
 
         # This is to get the CV file path
         cv_path = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf"), ("All Files", "*.*")])
-
+        
         # This is to test user registration
         cursor = self.conn.cursor()
         cursor.execute("INSERT INTO users (username, password, age, interests, cv_path) VALUES (?, ?, ?, ?, ?)",
-                       (new_username, hashed_password, age, selected_interest, cv_path if cv_path else None))
+               (new_username, hashed_password, age, selected_interest, cv_path if cv_path else None))
         self.conn.commit()
 
         messagebox.showinfo("Registration", "Registration successful!")
@@ -283,8 +282,9 @@ class MTO:
         self.notebook.select(1)
 
     def get_current_username(self):
+        current_page_id = self.notebook.index(self.notebook.select()) + 1
         cursor = self.conn.cursor()
-        cursor.execute("SELECT username FROM users WHERE id=?", (self.notebook.index(self.notebook.select()) + 1,))
+        cursor.execute("SELECT username FROM users WHERE id=?", (current_page_id,))
         result = cursor.fetchone()
         return result[0] if result else None
     
