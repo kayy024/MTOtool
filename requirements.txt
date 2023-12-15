@@ -1,0 +1,4 @@
+# Libraries required for the MTO Tool
+tkinter
+spacy
+PyPDF2
