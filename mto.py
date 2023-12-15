@@ -7,10 +7,11 @@ import tempfile
 import webbrowser
 import subprocess
 import spacy
-from nltk.tokenize import word_tokenize, sent_tokenize
-from nltk.corpus import stopwords
-from itertools import cycle
+# from nltk.tokenize import word_tokenize, sent_tokenize
+# from nltk.corpus import stopwords
+# from itertools import cycle
 import csv
+import PyPDF2
 
 class MTO:
     def __init__(self, master):
@@ -185,6 +186,82 @@ class MTO:
         else:
             messagebox.showinfo("No CV", "No CV to view.")
 
+    def load_job_keywords(self):
+        job_keywords = {}
+
+        with open('jobs.csv', newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                job_id = row['jobs_id']
+                keywords = [kw.strip() for kw in row[' keywords'].split(',')]
+                job_keywords[job_id] = keywords
+
+        return job_keywords
+
+    def extract_keywords_from_pdf(self, pdf_path):
+        if pdf_path is None or not os.path.exists(pdf_path):
+            messagebox.showerror("Error", "CV file not found.")
+            return []
+        
+        keywords = set()
+
+        with open(pdf_path, 'rb') as pdf_file:
+            pdf_reader = PyPDF2.PdfReader(pdf_file)
+            for page_num in range(len(pdf_reader.pages)):
+                page = pdf_reader.pages[page_num]
+                text = page.extract_text()
+                doc = self.nlp(text)
+
+                for token in doc:
+                    if not token.is_stop and not token.is_punct:
+                        keywords.add(token.text.lower())
+
+        return list(keywords)
+
+            
+    def match_jobs_to_keywords(self, cv_keywords):
+        jobs_keywords = self.load_job_keywords()
+
+        matching_jobs = []
+        for job_id, job_keywords in jobs_keywords.items():
+            if any(keyword in job_keywords for keyword in cv_keywords):
+                matching_jobs.append(job_id)
+
+        return matching_jobs 
+
+    def display_matching_jobs(self, matching_frame, matching_jobs):
+        jobs_label = tk.Label(matching_frame, text="Matching Jobs:")
+        jobs_label.pack()
+
+        find_jobs_button = tk.Button(matching_frame, text="Find Jobs Now", command=self.find_jobs)
+        find_jobs_button.pack()
+
+        for job_id in matching_jobs:
+            job_url = self.get_job_url(job_id)
+            job_label_text = f"{job_id} - {job_url}"
+
+            job_label = tk.Label(matching_frame, text=job_label_text, fg="blue", cursor="hand2")
+            job_label.bind("<Button-1>", lambda event, url=job_url: self.open_url(event, url))
+            job_label.pack()
+
+    def find_jobs(self):
+    # Get the current user's CV path
+        cv_path = self.get_current_cv_path()
+
+        if not cv_path or not os.path.exists(cv_path):
+            messagebox.showinfo("No CV", "No valid CV found.")
+            return
+
+        # Extract keywords from the user's CV
+        cv_keywords = self.extract_keywords_from_pdf(cv_path)
+
+        # Match jobs based on keywords
+        matching_jobs = self.match_jobs_to_keywords(cv_keywords)
+
+        # Display the matching jobs
+        matching_frame = self.notebook.winfo_children()[2]
+        self.display_matching_jobs(matching_frame, matching_jobs)
+
         # This page which will match users to jobs
     def create_matching_page(self):
         matching_frame = ttk.Frame(self.notebook)
@@ -192,6 +269,28 @@ class MTO:
 
         matching_label = tk.Label(matching_frame, text="Matching in progress...")
         matching_label.pack()
+
+        # Get the current user's CV path
+        username = self.get_current_username()
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT cv_path FROM users WHERE username=?", (username,))
+        result = cursor.fetchone()
+
+        if result is not None:
+            cv_path = result[0]
+            if cv_path:
+                # Extract keywords from the user's CV
+                cv_keywords = self.extract_keywords_from_pdf(cv_path)
+
+                # Now you can use cv_keywords to match with job requirements
+                matching_jobs = self.match_jobs_to_keywords(cv_keywords)
+
+                # Display the matching jobs
+                self.display_matching_jobs(matching_frame, matching_jobs)
+            else:
+                messagebox.showinfo("No CV", "No CV to match.")
+        else:
+            messagebox.showinfo("No CV", "No CV to match.")
 
         logout_button = tk.Button(matching_frame, text="Logout", command=self.logout)
         logout_button.pack()
@@ -207,14 +306,14 @@ class MTO:
         logout_button = tk.Button(chatbot_frame, text="Logout", command=self.logout)
         logout_button.pack()
 
-        # This allows users to logout
     def create_logout_page(self):
         logout_frame = ttk.Frame(self.notebook)
         self.notebook.add(logout_frame, text="Logout")
 
         logout_button = tk.Button(logout_frame, text="Logout", command=self.logout)
-        logout_button.pack()    
-    
+        logout_button.pack()
+
+
     def logout(self):
         # Remove all pages except the login/register page
         for page in self.notebook.winfo_children()[1:]:
@@ -292,6 +391,13 @@ class MTO:
         result = cursor.fetchone()
         return result[0] if result else None
     
+    def get_current_cv_path(self):
+        username = self.get_current_username()
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT cv_path FROM users WHERE username=?", (username,))
+        result = cursor.fetchone()
+        return result[0] if result and result[0] else ""
+
 if __name__ == "__main__":
     root = tk.Tk()
     app = MTO(root)
