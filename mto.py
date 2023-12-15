@@ -165,7 +165,7 @@ class MTO:
         cursor.execute("UPDATE users SET cv_path=NULL WHERE username=?", (username,))
         self.conn.commit()
         messagebox.showinfo("CV Deleted", "CV path successfully removed from the database.")
-       
+
         # This is to allow users view their uploaded CV
     def view_cv(self):
         username = self.get_current_username()
@@ -245,15 +245,21 @@ class MTO:
             job_label.pack()
 
     def find_jobs(self):
-    # Get the current user's CV path
+        # Get the current user's CV path
         cv_path = self.get_current_cv_path()
+
+        print(f"CV Path: {cv_path}")
 
         if not cv_path or not os.path.exists(cv_path):
             messagebox.showinfo("No CV", "No valid CV found.")
             return
 
+        print("CV exists and is valid.")
+
         # Extract keywords from the user's CV
         cv_keywords = self.extract_keywords_from_pdf(cv_path)
+
+        print(f"Extracted Keywords: {cv_keywords}")
 
         # Match jobs based on keywords
         matching_jobs = self.match_jobs_to_keywords(cv_keywords)
@@ -262,7 +268,7 @@ class MTO:
         matching_frame = self.notebook.winfo_children()[2]
         self.display_matching_jobs(matching_frame, matching_jobs)
 
-        # This page which will match users to jobs
+            # This page which will match users to jobs
     def create_matching_page(self):
         matching_frame = ttk.Frame(self.notebook)
         self.notebook.add(matching_frame, text="Matching")
