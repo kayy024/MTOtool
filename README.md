@@ -15,4 +15,10 @@ MAC: `pip3 install -r requirements.txt`
    Execute the following in your terminal to launch the tool.
    `python mto.py`
 
+3. To login with a test user
+   Below are credentials that can be used to log in and see the tool:
+
+   Username: `user`
+   Password: `hello`
+
 _NOTE - this is just a prototype with the beginning of an algorithm and is not fully developed._
