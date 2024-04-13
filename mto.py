@@ -7,11 +7,11 @@ import tempfile
 import webbrowser
 import subprocess
 import spacy
-# from nltk.tokenize import word_tokenize, sent_tokenize
-# from nltk.corpus import stopwords
-# from itertools import cycle
 import csv
 import PyPDF2
+import numpy as np
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 class MTO:
     def __init__(self, master):
@@ -34,6 +34,12 @@ class MTO:
 
         #Here I am loading the spaCy model
         self.nlp = spacy.load("en_core_web_sm")
+
+        # Flag to track whether additional pages have been created after login
+        self.pages_created = False
+
+        # Store the current username
+        self.current_username = None
 
     def create_table(self):
         cursor = self.conn.cursor()
@@ -130,14 +136,14 @@ class MTO:
 
         # This is to allow users save their CV
     def save_cv_path(self, cv_path):
-        username = self.get_current_username()
+        username = self.current_username
         cursor = self.conn.cursor()
         cursor.execute("UPDATE users SET cv_path=? WHERE username=?", (cv_path, username))
         self.conn.commit()
 
         # This is to allow users to update their CV
     def update_cv(self):
-        username = self.get_current_username()
+        username = self.current_username
         cursor = self.conn.cursor()
         cursor.execute("SELECT cv_path FROM users WHERE username=?", (username,))
         result = cursor.fetchone()
@@ -160,7 +166,7 @@ class MTO:
 
         # This is to allow users to delete their CV
     def delete_cv(self):
-        username = self.get_current_username()
+        username = self.current_username
         cursor = self.conn.cursor()
         cursor.execute("UPDATE users SET cv_path=NULL WHERE username=?", (username,))
         self.conn.commit()
@@ -168,7 +174,7 @@ class MTO:
 
         # This is to allow users view their uploaded CV
     def view_cv(self):
-        username = self.get_current_username()
+        username = self.current_username
         cursor = self.conn.cursor()
         cursor.execute("SELECT cv_path FROM users WHERE username=?", (username,))
         result = cursor.fetchone()
@@ -218,13 +224,26 @@ class MTO:
 
         return list(keywords)
 
-            
     def match_jobs_to_keywords(self, cv_keywords):
         jobs_keywords = self.load_job_keywords()
 
         matching_jobs = []
         for job_id, job_keywords in jobs_keywords.items():
-            if any(keyword in job_keywords for keyword in cv_keywords):
+            # Combine user CV keywords and job keywords into documents
+            documents = [", ".join(cv_keywords), ", ".join(job_keywords)]
+
+            # Convert documents to vectors
+            count_vectorizer = CountVectorizer()
+            sparse_matrix = count_vectorizer.fit_transform(documents)
+
+            # Calculate cosine similarity between user CV and job keywords
+            cosine_sim = cosine_similarity(sparse_matrix, sparse_matrix)
+
+            # Get similarity score between user CV and job keywords
+            similarity_score = cosine_sim[0][1]
+
+            # If similarity score is above a certain threshold, consider it a matching job
+            if similarity_score > 0.5:  # Adjust the threshold as needed
                 matching_jobs.append(job_id)
 
         return matching_jobs 
@@ -277,24 +296,16 @@ class MTO:
         matching_label.pack()
 
         # Get the current user's CV path
-        username = self.get_current_username()
-        cursor = self.conn.cursor()
-        cursor.execute("SELECT cv_path FROM users WHERE username=?", (username,))
-        result = cursor.fetchone()
+        cv_path = self.get_current_cv_path()
+        if cv_path:
+            # Extract keywords from the user's CV
+            cv_keywords = self.extract_keywords_from_pdf(cv_path)
 
-        if result is not None:
-            cv_path = result[0]
-            if cv_path:
-                # Extract keywords from the user's CV
-                cv_keywords = self.extract_keywords_from_pdf(cv_path)
+            # Now you can use cv_keywords to match with job requirements
+            matching_jobs = self.match_jobs_to_keywords(cv_keywords)
 
-                # Now you can use cv_keywords to match with job requirements
-                matching_jobs = self.match_jobs_to_keywords(cv_keywords)
-
-                # Display the matching jobs
-                self.display_matching_jobs(matching_frame, matching_jobs)
-            else:
-                messagebox.showinfo("No CV", "No CV to match.")
+            # Display the matching jobs
+            self.display_matching_jobs(matching_frame, matching_jobs)
         else:
             messagebox.showinfo("No CV", "No CV to match.")
 
@@ -345,6 +356,8 @@ class MTO:
         # Authenticate user
         if self.authenticate(username, hashed_password):
             messagebox.showinfo("Login", "Login successful!")
+            # Store the current username
+            self.current_username = username
             self.create_pages_after_login()
         else:
             messagebox.showerror("Login Failed", "Invalid username or password.")
@@ -383,22 +396,18 @@ class MTO:
 
     def create_pages_after_login(self):
         # After a successful login or registration, the gui will create the additional pages
-        self.create_upload_cv_page()
-        self.create_matching_page()
-        self.create_chatbot_page()
-        self.create_logout_page()
+        if not self.pages_created:
+            self.create_upload_cv_page()
+            self.create_matching_page()
+            self.create_chatbot_page()
+            self.create_logout_page()
+            # Set the flag to True after creating the pages
+            self.pages_created = True
         # This redirects users to the CV page as soon as they are logged in
         self.notebook.select(1)
 
-    def get_current_username(self):
-        current_page_id = self.notebook.index(self.notebook.select()) + 1
-        cursor = self.conn.cursor()
-        cursor.execute("SELECT username FROM users WHERE id=?", (current_page_id,))
-        result = cursor.fetchone()
-        return result[0] if result else None
-    
     def get_current_cv_path(self):
-        username = self.get_current_username()
+        username = self.current_username
         cursor = self.conn.cursor()
         cursor.execute("SELECT cv_path FROM users WHERE username=?", (username,))
         result = cursor.fetchone()
@@ -408,4 +417,3 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = MTO(root)
     root.mainloop()
-
