@@ -252,8 +252,22 @@ class MTO:
         jobs_label = tk.Label(matching_frame, text="Matching Jobs:")
         jobs_label.pack()
 
-        find_jobs_button = tk.Button(matching_frame, text="Find Jobs Now", command=self.find_jobs)
-        find_jobs_button.pack()
+        find_jobs_buttons = matching_frame.winfo_children()
+        find_jobs_button_exists = any(isinstance(child, tk.Button) and child["text"] == "Find Jobs Now" for child in find_jobs_buttons)
+
+        if not find_jobs_button_exists:
+            find_jobs_button = tk.Button(matching_frame, text="Find Jobs Now", command=self.find_jobs)
+            find_jobs_button.pack()
+
+        for job_id in matching_jobs:
+            job_url = self.get_job_url(job_id)
+            job_label_text = f"{job_id} - {job_url}"
+
+            job_label = tk.Label(matching_frame, text=job_label_text, fg="blue", cursor="hand2")
+            job_label.bind("<Button-1>", lambda event, url=job_url: self.open_url(event, url))
+            job_label.pack()
+            find_jobs_button = tk.Button(matching_frame, text="Find Jobs Now", command=self.find_jobs)
+            find_jobs_button.pack()
 
         for job_id in matching_jobs:
             job_url = self.get_job_url(job_id)
