@@ -202,6 +202,8 @@ class MTO:
                 keywords = [kw.strip() for kw in row[' keywords'].split(',')]
                 job_keywords[job_id] = keywords
 
+        print(f"Loaded Job Keywords: {job_keywords}")
+
         return job_keywords
 
     def extract_keywords_from_pdf(self, pdf_path):
@@ -227,7 +229,7 @@ class MTO:
     def match_jobs_to_keywords(self, cv_keywords):
         jobs_keywords = self.load_job_keywords()
 
-        matching_jobs = []
+        matching_jobs = {}
         for job_id, job_keywords in jobs_keywords.items():
             # Combine user CV keywords and job keywords into documents
             documents = [", ".join(cv_keywords), ", ".join(job_keywords)]
@@ -237,14 +239,14 @@ class MTO:
             sparse_matrix = count_vectorizer.fit_transform(documents)
 
             # Calculate cosine similarity between user CV and job keywords
-            cosine_sim = cosine_similarity(sparse_matrix, sparse_matrix)
+            cosine_sim = cosine_similarity(sparse_matrix)
 
             # Get similarity score between user CV and job keywords
             similarity_score = cosine_sim[0][1]
 
             # If similarity score is above a certain threshold, consider it a matching job
-            if similarity_score > 0.5:  # Adjust the threshold as needed
-                matching_jobs.append(job_id)
+            if similarity_score > 0.3:  # Adjust the threshold as needed
+                matching_jobs[job_id] = similarity_score
 
         return matching_jobs 
 
@@ -252,30 +254,21 @@ class MTO:
         jobs_label = tk.Label(matching_frame, text="Matching Jobs:")
         jobs_label.pack()
 
+        for job_id, _ in matching_jobs.items():
+            job_url = self.get_job_url(job_id)
+            job_label_text = f"{job_id} - {job_url}"
+
+            job_label = tk.Label(matching_frame, text=job_label_text, fg="blue", cursor="hand2")
+            job_label.bind("<Button-1>", lambda event, url=job_url: self.open_url(event, url))
+            job_label.pack()
+
+        # Add "Find Jobs Now" button if it doesn't exist
         find_jobs_buttons = matching_frame.winfo_children()
         find_jobs_button_exists = any(isinstance(child, tk.Button) and child["text"] == "Find Jobs Now" for child in find_jobs_buttons)
 
         if not find_jobs_button_exists:
             find_jobs_button = tk.Button(matching_frame, text="Find Jobs Now", command=self.find_jobs)
             find_jobs_button.pack()
-
-        for job_id in matching_jobs:
-            job_url = self.get_job_url(job_id)
-            job_label_text = f"{job_id} - {job_url}"
-
-            job_label = tk.Label(matching_frame, text=job_label_text, fg="blue", cursor="hand2")
-            job_label.bind("<Button-1>", lambda event, url=job_url: self.open_url(event, url))
-            job_label.pack()
-            find_jobs_button = tk.Button(matching_frame, text="Find Jobs Now", command=self.find_jobs)
-            find_jobs_button.pack()
-
-        for job_id in matching_jobs:
-            job_url = self.get_job_url(job_id)
-            job_label_text = f"{job_id} - {job_url}"
-
-            job_label = tk.Label(matching_frame, text=job_label_text, fg="blue", cursor="hand2")
-            job_label.bind("<Button-1>", lambda event, url=job_url: self.open_url(event, url))
-            job_label.pack()
 
     def find_jobs(self):
         # Get the current user's CV path
@@ -297,8 +290,11 @@ class MTO:
         # Match jobs based on keywords
         matching_jobs = self.match_jobs_to_keywords(cv_keywords)
 
+        print(f"Matching Jobs: {matching_jobs}") 
+
         # Display the matching jobs
         matching_frame = self.notebook.winfo_children()[2]
+        print(f"Matching Frame: {matching_frame}")  
         self.display_matching_jobs(matching_frame, matching_jobs)
 
             # This page which will match users to jobs
@@ -402,10 +398,10 @@ class MTO:
         # This is to test user registration
         cursor = self.conn.cursor()
         cursor.execute("INSERT INTO users (username, password, age, interests, cv_path) VALUES (?, ?, ?, ?, ?)",
-               (new_username, hashed_password, age, selected_interest, cv_path if cv_path else None))
+            (new_username, hashed_password, age, selected_interest, cv_path if cv_path else None))
         self.conn.commit()
 
-        messagebox.showinfo("Registration", "Registration successful!")
+        messagebox.showinfo("Registration", "Registration successful!") 
         self.create_pages_after_login()
 
     def create_pages_after_login(self):
