@@ -255,12 +255,12 @@ class MTO:
         jobs_label.pack()
 
         for job_id, _ in matching_jobs.items():
-            job_url = self.get_job_url(job_id)
-            job_label_text = f"{job_id} - {job_url}"
-
-            job_label = tk.Label(matching_frame, text=job_label_text, fg="blue", cursor="hand2")
-            job_label.bind("<Button-1>", lambda event, url=job_url: self.open_url(event, url))
-            job_label.pack()
+            job_name = self.get_job_name(job_id)
+            if job_name:
+                job_label_text = f"{job_name}"
+                job_label = tk.Label(matching_frame, text=job_label_text, fg="blue", cursor="hand2")
+                job_label.bind("<Button-1>", lambda event, id=job_id: self.show_job_details(event, id))
+                job_label.pack()
 
         # Add "Find Jobs Now" button if it doesn't exist
         find_jobs_buttons = matching_frame.winfo_children()
@@ -270,37 +270,48 @@ class MTO:
             find_jobs_button = tk.Button(matching_frame, text="Find Jobs Now", command=self.find_jobs)
             find_jobs_button.pack()
 
+
+
     def find_jobs(self):
-        # Get the current user's CV path
-        cv_path = self.get_current_cv_path()
+        matching_frame = None
+        for child in self.notebook.winfo_children():
+            if self.notebook.tab(child)['text'] == "Matching":
+                matching_frame = child
+                break
 
-        print(f"CV Path: {cv_path}")
+        if matching_frame:
+            # Get the current user's CV path
+            cv_path = self.get_current_cv_path()
 
-        if not cv_path or not os.path.exists(cv_path):
-            messagebox.showinfo("No CV", "No valid CV found.")
-            return
+            print(f"CV Path: {cv_path}")
 
-        print("CV exists and is valid.")
+            if not cv_path or not os.path.exists(cv_path):
+                messagebox.showinfo("No CV", "No valid CV found.")
+                return
 
-        # Extract keywords from the user's CV
-        cv_keywords = self.extract_keywords_from_pdf(cv_path)
+            print("CV exists and is valid.")
 
-        print(f"Extracted Keywords: {cv_keywords}")
+            # Extract keywords from the user's CV
+            cv_keywords = self.extract_keywords_from_pdf(cv_path)
 
-        # Match jobs based on keywords
-        matching_jobs = self.match_jobs_to_keywords(cv_keywords)
+            print(f"Extracted Keywords: {cv_keywords}")
 
-        print(f"Matching Jobs: {matching_jobs}") 
+            # Match jobs based on keywords
+            matching_jobs = self.match_jobs_to_keywords(cv_keywords)
 
-        # Display the matching jobs
-        matching_frame = self.notebook.winfo_children()[2]
-        print(f"Matching Frame: {matching_frame}")  
-        self.display_matching_jobs(matching_frame, matching_jobs)
+            print(f"Matching Jobs: {matching_jobs}")
+
+            # Display the matching jobs
+            self.display_matching_jobs(matching_frame, matching_jobs)
+        else:
+            messagebox.showinfo("Page Not Found", "Matching page not found.")
+
 
             # This page which will match users to jobs
     def create_matching_page(self):
         matching_frame = ttk.Frame(self.notebook)
         self.notebook.add(matching_frame, text="Matching")
+        self.notebook.pack(expand=1, fill="both")  # Make sure the notebook is packed properly
 
         matching_label = tk.Label(matching_frame, text="Matching in progress...")
         matching_label.pack()
@@ -310,8 +321,6 @@ class MTO:
         if cv_path:
             # Extract keywords from the user's CV
             cv_keywords = self.extract_keywords_from_pdf(cv_path)
-
-            # Now you can use cv_keywords to match with job requirements
             matching_jobs = self.match_jobs_to_keywords(cv_keywords)
 
             # Display the matching jobs
