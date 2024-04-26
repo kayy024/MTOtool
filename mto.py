@@ -244,11 +244,18 @@ class MTO:
             # Get similarity score between user CV and job keywords
             similarity_score = cosine_sim[0][1]
 
+            print(f"Job ID: {job_id}")
+            # print(f"User CV Keywords: {cv_keywords}")
+            # print(f"Job Keywords: {job_keywords}")
+            print(f"Similarity Score: {similarity_score}")
+
             # If similarity score is above a certain threshold, consider it a matching job
             if similarity_score > 0.3:  # Adjust the threshold as needed
                 matching_jobs[job_id] = similarity_score
 
-        return matching_jobs 
+        return matching_jobs
+
+
 
     def display_matching_jobs(self, matching_frame, matching_jobs):
         jobs_label = tk.Label(matching_frame, text="Matching Jobs:")
@@ -270,8 +277,6 @@ class MTO:
             find_jobs_button = tk.Button(matching_frame, text="Find Jobs Now", command=self.find_jobs)
             find_jobs_button.pack()
 
-
-
     def find_jobs(self):
         matching_frame = None
         for child in self.notebook.winfo_children():
@@ -283,26 +288,25 @@ class MTO:
             # Get the current user's CV path
             cv_path = self.get_current_cv_path()
 
-            print(f"CV Path: {cv_path}")
-
             if not cv_path or not os.path.exists(cv_path):
                 messagebox.showinfo("No CV", "No valid CV found.")
                 return
 
-            print("CV exists and is valid.")
-
             # Extract keywords from the user's CV
             cv_keywords = self.extract_keywords_from_pdf(cv_path)
-
             print(f"Extracted Keywords: {cv_keywords}")
 
             # Match jobs based on keywords
             matching_jobs = self.match_jobs_to_keywords(cv_keywords)
 
-            print(f"Matching Jobs: {matching_jobs}")
+            # Print out the matching jobs for debugging
+            print("Matching Jobs:", matching_jobs)
 
             # Display the matching jobs
-            self.display_matching_jobs(matching_frame, matching_jobs)
+            if matching_jobs:
+                self.display_matching_jobs(matching_frame, matching_jobs)
+            else:
+                messagebox.showinfo("No Matching Jobs", "No jobs matching your CV were found.")
         else:
             messagebox.showinfo("Page Not Found", "Matching page not found.")
 
