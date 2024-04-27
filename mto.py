@@ -370,6 +370,35 @@ class MTO:
         else:
             messagebox.showinfo("Page Not Found", "Matching page not found.")
 
+    def show_job_details(self, event, job_id):
+        job_url = self.get_job_url(job_id)
+
+        if job_url:
+            webbrowser.open_new(job_url)
+        else:
+            messagebox.showwarning("Job Details", "Not found. Please try again later.")
+
+    def get_job_url(self, job_id):
+         job_urls = {
+            "Summer Analyst": "https://www.linkedin.com/jobs/view/3907451744",
+            "Corporate Finance Specialist": "https://www.linkedin.com/jobs/view/3900527088",
+            "Cloud Engineer (Summer)": "https://www.linkedin.com/jobs/view/3902610321",
+            "Undergraduate Data Scientists Industrial Placement": "https://www.gradcracker.com/hub/839/ipsos-jarmany/work-placement-internship/59959/junior-analyst-university-industrial-placement",
+            "Data Science Graduate": "https://www.linkedin.com/jobs/view/3905877045",
+            "Technical Web Analyst": "https://www.linkedin.com/jobs/view/3907579224",
+            "Business Analyst": "https://www.linkedin.com/jobs/view/3906000258",
+            "Junior Business Analyst": "https://www.linkedin.com/jobs/view/3888080805",
+            "2024 Information Technology Summer Internship Programme": "https://www.linkedin.com/jobs/view/3839793758",
+            "Software Engineer Intern": "https://www.linkedin.com/jobs/view/3879272174",
+            "Graduate Software Engineer": "https://www.linkedin.com/jobs/view/3892353241",
+            "Software Engineer Intern": "https://www.linkedin.com/jobs/view/3881620345",
+            "Software Development Engineer (Summer) ": "https://www.linkedin.com/jobs/view/3911961620",
+            "Junior Financial Accountant": "https://www.linkedin.com/jobs/view/3838045425",
+            "Assistant Accountant": "https://www.linkedin.com/jobs/view/3907783530",
+            "Data Science Researcher": "https://www.linkedin.com/jobs/view/3902598941",
+         }
+         return job_urls.get(job_id, None)
+    
         # This is a chatbot page
     def create_chatbot_page(self):
         chatbot_frame = ttk.Frame(self.notebook)
