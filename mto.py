@@ -250,7 +250,7 @@ class MTO:
             print(f"Similarity Score: {similarity_score}")
 
             # If similarity score is above a certain threshold, consider it a matching job
-            if similarity_score > 0.3:  # Adjust the threshold as needed
+            if similarity_score > 0.1:  # Adjust the threshold as needed
                 matching_jobs[job_id] = similarity_score
 
         return matching_jobs
@@ -276,6 +276,14 @@ class MTO:
         if not find_jobs_button_exists:
             find_jobs_button = tk.Button(matching_frame, text="Find Jobs Now", command=self.find_jobs)
             find_jobs_button.pack()
+
+    def get_job_name(self, job_id):
+        with open('jobs.csv', newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                if row['jobs_id'] == job_id:
+                    return row['jobs_id']
+        return None
 
     def find_jobs(self):
         matching_frame = None
@@ -317,23 +325,50 @@ class MTO:
         self.notebook.add(matching_frame, text="Matching")
         self.notebook.pack(expand=1, fill="both")  # Make sure the notebook is packed properly
 
-        matching_label = tk.Label(matching_frame, text="Matching in progress...")
+        matching_label = tk.Label(matching_frame, text="Click below to see matching jobs.")
         matching_label.pack()
 
-        # Get the current user's CV path
-        cv_path = self.get_current_cv_path()
-        if cv_path:
-            # Extract keywords from the user's CV
-            cv_keywords = self.extract_keywords_from_pdf(cv_path)
-            matching_jobs = self.match_jobs_to_keywords(cv_keywords)
-
-            # Display the matching jobs
-            self.display_matching_jobs(matching_frame, matching_jobs)
-        else:
-            messagebox.showinfo("No CV", "No CV to match.")
+        find_jobs_button = tk.Button(matching_frame, text="Find Jobs Now", command=self.find_and_display_jobs)
+        find_jobs_button.pack()
 
         logout_button = tk.Button(matching_frame, text="Logout", command=self.logout)
         logout_button.pack()
+
+    def find_and_display_jobs(self):
+        matching_frame = None
+        for child in self.notebook.winfo_children():
+            if self.notebook.tab(child)['text'] == "Matching":
+                matching_frame = child
+                break
+
+        if matching_frame:
+            # Get the current user's CV path
+            cv_path = self.get_current_cv_path()
+
+            if not cv_path or not os.path.exists(cv_path):
+                messagebox.showinfo("No CV", "No valid CV found.")
+                return
+
+            # Extract keywords from the user's CV
+            cv_keywords = self.extract_keywords_from_pdf(cv_path)
+            print(f"Extracted Keywords: {cv_keywords}")
+
+            # Match jobs based on keywords
+            matching_jobs = self.match_jobs_to_keywords(cv_keywords)
+
+            # Print out the matching jobs for debugging
+            print("Matching Jobs:", matching_jobs)
+
+            # Display the matching jobs
+            if matching_jobs:
+                # Clear existing labels in the frame
+                for child in matching_frame.winfo_children():
+                    child.destroy()
+                self.display_matching_jobs(matching_frame, matching_jobs)
+            else:
+                messagebox.showinfo("No Matching Jobs", "No jobs matching your CV were found.")
+        else:
+            messagebox.showinfo("Page Not Found", "Matching page not found.")
 
         # This is a chatbot page
     def create_chatbot_page(self):
