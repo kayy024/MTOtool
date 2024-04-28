@@ -9,9 +9,11 @@ import subprocess
 import spacy
 import csv
 import PyPDF2
+import tkinter.scrolledtext as scrolledtext
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.metrics.pairwise import cosine_similarity 
+
 
 class MTO:
     def __init__(self, master):
@@ -40,6 +42,18 @@ class MTO:
 
         # Store the current username
         self.current_username = None
+
+        self.chatbot_responses = {
+        "hello": "Hi there! How can I assist you today?",
+        "job matching": "To find matching jobs, please go to the 'Matching' page and click 'Find Jobs Now'.",
+        "update CV": "You can update your CV on the 'Upload CV' page by clicking 'Update CV'.",
+        "help": "How can I assist you? You can ask about job matching, updating your CV, or anything related to MTOx.",
+        "bye": "Goodbye! Feel free to reach out if you need further assistance.",
+        "find me a job": "Sure! To find you a job, I'll need to know more about your skills and experience. Have you uploaded your CV yet?",
+        "what industries are hiring": "Several industries are actively hiring, including technology, healthcare, finance, and e-commerce. What industry are you interested in?",
+        "what skills are in demand": "Skills such as programming languages (Python, Java, etc.), data analysis, project management, and communication skills are often in high demand. Do you have any of these skills?",
+        "what job opportunities match my skills": "To find job opportunities that match your skills, I can analyze your CV keywords and suggest relevant positions. Would you like me to do that?",
+        }
 
     def create_table(self):
         cursor = self.conn.cursor()
@@ -255,8 +269,6 @@ class MTO:
 
         return matching_jobs
 
-
-
     def display_matching_jobs(self, matching_frame, matching_jobs):
         jobs_label = tk.Label(matching_frame, text="Matching Jobs:")
         jobs_label.pack()
@@ -317,7 +329,6 @@ class MTO:
                 messagebox.showinfo("No Matching Jobs", "No jobs matching your CV were found.")
         else:
             messagebox.showinfo("Page Not Found", "Matching page not found.")
-
 
             # This page which will match users to jobs
     def create_matching_page(self):
@@ -404,11 +415,31 @@ class MTO:
         chatbot_frame = ttk.Frame(self.notebook)
         self.notebook.add(chatbot_frame, text="Chatbot")
 
-        chatbot_label = tk.Label(chatbot_frame, text="Chatbot interface will be here.")
-        chatbot_label.pack()
+        # Create a scrolled text widget to display chat messages
+        self.chat_display = scrolledtext.ScrolledText(chatbot_frame, wrap=tk.WORD, width=40, height=20)
+        self.chat_display.pack(expand=True, fill="both")
+
+        # Create an entry widget for user input
+        self.chat_entry = tk.Entry(chatbot_frame)
+        self.chat_entry.pack(fill="x")
+
+        # Create a button to send messages
+        send_button = tk.Button(chatbot_frame, text="Send", command=self.send_message)
+        send_button.pack()
 
         logout_button = tk.Button(chatbot_frame, text="Logout", command=self.logout)
         logout_button.pack()
+    
+    def send_message(self):
+        message = self.chat_entry.get().lower()  
+        self.chat_entry.delete(0, tk.END)  
+
+        response = self.chatbot_responses.get(message, "I'm sorry, I didn't understand that.")
+
+        self.chat_display.insert(tk.END, "You: " + message + "\n")
+        self.chat_display.insert(tk.END, "MTO: " + response + "\n")
+        self.chat_display.see(tk.END)
+
 
     def create_logout_page(self):
         logout_frame = ttk.Frame(self.notebook)
