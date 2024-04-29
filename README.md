@@ -18,7 +18,7 @@ MAC: `pip3 install -r requirements.txt`
 3. To login with a test user
    Below are credentials that can be used to log in and see the tool:
 
-   Username: `user`
-   Password: `hello`
+   Username: `khadijah`
+   Password: `apple`
 
 _NOTE - this is just a prototype with the beginning of an algorithm and is not fully developed._

@@ -49,7 +49,7 @@ class MTO:
         "hello": "Hi there! How can I assist you today?",
         "job matching": "To find matching jobs, please go to the 'Matching' page and click 'Find Jobs Now'.",
         "update cv": "You can update your CV on the 'Upload CV' page by clicking 'Update CV'.",
-        "help": "How can I assist you? You can ask about job matching, updating your CV, or anything related to MTOx.",
+        "help": "How can I assist you? You can ask about job matching, updating your CV, or anything related to MTO.",
         "bye": "Goodbye! Feel free to reach out if you need further assistance.",
         "find me a job": "Sure! To find you a job, I'll need to know more about your skills and experience. Have you uploaded your CV yet?",
         "what industries are hiring": "Several industries are actively hiring, including technology, healthcare, finance, and e-commerce. What industry are you interested in?",
